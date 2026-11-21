@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Focus Dashboard</title>
+    <style>
+      /* ── Reset & base ── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #22263a;
+        --accent: #7c6af7;
+        --accent-h: #9b8dff;
+        --danger: #e05c6e;
+        --success: #4caf7d;
+        --text: #e8eaf0;
+        --muted: #7a7f99;
+        --radius: 14px;
+        --shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+      }
+
+      body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 24px 16px 48px;
+      }
+
+      h2 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+      }
+
+      /* ── Layout ── */
+      .dashboard {
+        max-width: 860px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+          "greeting  greeting"
+          "timer     todo";
+      }
+
+      @media (max-width: 600px) {
+        .dashboard {
+          grid-template-columns: 1fr;
+          grid-template-areas: "greeting" "timer" "todo";
+        }
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: var(--radius);
+        padding: 28px 24px;
+        box-shadow: var(--shadow);
+      }
+
+      /* ── Greeting ── */
+      #greeting-card {
+        grid-area: greeting;
+      }
+
+      #greeting-text {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      #datetime {
+        margin-top: 8px;
+        font-size: 1rem;
+        color: var(--muted);
+      }
+
+      /* ── Timer ── */
+      #timer-card {
+        grid-area: timer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #timer-card h2 {
+        align-self: flex-start;
+      }
+
+      #timer-display {
+        font-size: 4.5rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.04em;
+        color: var(--text);
+        margin: 16px 0 24px;
+        transition: color 0.3s;
+      }
+
+      #timer-display.running {
+        color: var(--accent-h);
+      }
+      #timer-display.done {
+        color: var(--success);
+      }
+
+      .timer-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      button {
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition:
+          filter 0.15s,
+          transform 0.1s;
+      }
+      button:active {
+        transform: scale(0.96);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        filter: brightness(1.15);
+      }
+      .btn-secondary {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .btn-secondary:hover {
+        filter: brightness(1.2);
+      }
+      .btn-danger {
+        background: var(--danger);
+        color: #fff;
+      }
+      .btn-danger:hover {
+        filter: brightness(1.15);
+      }
+
+      #timer-label {
+        margin-top: 14px;
+        font-size: 0.8rem;
+        color: var(--muted);
+        text-align: center;
+        min-height: 1em;
+      }
+
+      /* ── To-Do ── */
+      #todo-card {
+        grid-area: todo;
+      }
+
+      .todo-add {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .todo-add input {
+        flex: 1;
+        background: var(--surface2);
+        border: 1.5px solid transparent;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: var(--text);
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .todo-add input::placeholder {
+        color: var(--muted);
+      }
+      .todo-add input:focus {
+        border-color: var(--accent);
+      }
+
+      #task-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 420px;
+        overflow-y: auto;
+        padding-right: 2px;
+      }
+
+      /* scrollbar */
+      #task-list::-webkit-scrollbar {
+        width: 5px;
+      }
+      #task-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      #task-list::-webkit-scrollbar-thumb {
+        background: var(--surface2);
+        border-radius: 4px;
+      }
+
+      .task-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--surface2);
+        border-radius: 9px;
+        padding: 10px 12px;
+        transition: opacity 0.2s;
+      }
+
+      .task-item.done {
+        opacity: 0.5;
+      }
+
+      .task-check {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--accent);
+        border-radius: 50%;
+        flex-shrink: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+      .task-item.done .task-check {
+        background: var(--accent);
+      }
+      .task-check::after {
+        content: "";
+        width: 6px;
+        height: 10px;
+        border: 2px solid #fff;
+        border-top: none;
+        border-left: none;
+        transform: rotate(45deg) translate(-1px, -1px);
+        display: none;
+      }
+      .task-item.done .task-check::after {
+        display: block;
+      }
+
+      .task-text {
+        flex: 1;
+        font-size: 0.95rem;
+        word-break: break-word;
+        outline: none;
+        background: transparent;
+        border: none;
+        color: var(--text);
+        cursor: text;
+      }
+      .task-item.done .task-text {
+        text-decoration: line-through;
+        color: var(--muted);
+      }
+      .task-text:focus {
+        background: rgba(124, 106, 247, 0.1);
+        border-radius: 4px;
+        padding: 2px 4px;
+      }
+
+      .task-delete {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 1.1rem;
+        padding: 2px 6px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition:
+          color 0.15s,
+          background 0.15s;
+        line-height: 1;
+      }
+      .task-delete:hover {
+        color: var(--danger);
+        background: rgba(224, 92, 110, 0.12);
+      }
+
+      .todo-empty {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.9rem;
+        padding: 24px 0;
+      }
+
+      /* ── Animations ── */
+      @keyframes fadeSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .task-item {
+        animation: fadeSlideIn 0.22s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard">
+      <!-- Greeting -->
+      <div class="card" id="greeting-card">
+        <div id="greeting-text">Good morning!</div>
+        <div id="datetime"></div>
+      </div>
+
+      <!-- Focus Timer -->
+      <div class="card" id="timer-card">
+        <h2>Focus Timer</h2>
+        <div id="timer-display">25:00</div>
+        <div class="timer-buttons">
+          <button class="btn-primary" id="btn-start">Start</button>
+          <button class="btn-secondary" id="btn-stop">Stop</button>
+          <button class="btn-secondary" id="btn-reset">Reset</button>
+        </div>
+        <div id="timer-label">25-minute focus session</div>
+      </div>
+
+      <!-- To-Do List -->
+      <div class="card" id="todo-card">
+        <h2>To-Do List</h2>
+        <div class="todo-add">
+          <input
+            type="text"
+            id="task-input"
+            placeholder="Add a new task…"
+            maxlength="200"
+          />
+          <button class="btn-primary" id="btn-add-task">Add</button>
+        </div>
+        <ul id="task-list"></ul>
+        <p class="todo-empty" id="todo-empty">No tasks yet. Add one above!</p>
+      </div>
+    </div>
+
+    <script>
+      /* ═══════════════════════════════════
+     GREETING & CLOCK
+  ═══════════════════════════════════ */
+      function updateGreeting() {
+        const now = new Date();
+        const hour = now.getHours();
+
+        let greeting;
+        if (hour < 12) greeting = "Good morning! ☀️";
+        else if (hour < 17) greeting = "Good afternoon! 🌤️";
+        else if (hour < 21) greeting = "Good evening! 🌇";
+        else greeting = "Good night! 🌙";
+
+        document.getElementById("greeting-text").textContent = greeting;
+
+        const dateStr = now.toLocaleDateString(undefined, {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        const timeStr = now.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        document.getElementById("datetime").textContent =
+          `${timeStr}  ·  ${dateStr}`;
+      }
+
+      updateGreeting();
+      setInterval(updateGreeting, 1000);
+
+      /* ═══════════════════════════════════
+     FOCUS TIMER
+  ═══════════════════════════════════ */
+      const TOTAL = 25 * 60; // seconds
+      let remaining = TOTAL;
+      let timerID = null;
+      let isRunning = false;
+
+      const display = document.getElementById("timer-display");
+      const btnStart = document.getElementById("btn-start");
+      const btnStop = document.getElementById("btn-stop");
+      const btnReset = document.getElementById("btn-reset");
+      const timerLabel = document.getElementById("timer-label");
+
+      function formatTime(s) {
+        const m = String(Math.floor(s / 60)).padStart(2, "0");
+        const sec = String(s % 60).padStart(2, "0");
+        return `${m}:${sec}`;
+      }
+
+      function renderTimer() {
+        display.textContent = formatTime(remaining);
+        if (remaining === 0) {
+          display.className = "done";
+          timerLabel.textContent = "🎉 Session complete! Take a break.";
+        } else if (isRunning) {
+          display.className = "running";
+          timerLabel.textContent = "Focus mode active…";
+        } else {
+          display.className = "";
+          timerLabel.textContent = "25-minute focus session";
+        }
+        btnStart.textContent = isRunning ? "Pause" : "Start";
+      }
+
+      function tick() {
+        if (remaining > 0) {
+          remaining--;
+          renderTimer();
+        } else {
+          clearInterval(timerID);
+          timerID = null;
+          isRunning = false;
+          renderTimer();
+        }
+      }
+
+      btnStart.addEventListener("click", () => {
+        if (remaining === 0) return;
+        if (isRunning) {
+          clearInterval(timerID);
+          timerID = null;
+          isRunning = false;
+        } else {
+          timerID = setInterval(tick, 1000);
+          isRunning = true;
+        }
+        renderTimer();
+      });
+
+      btnStop.addEventListener("click", () => {
+        clearInterval(timerID);
+        timerID = null;
+        isRunning = false;
+        renderTimer();
+      });
+
+      btnReset.addEventListener("click", () => {
+        clearInterval(timerID);
+        timerID = null;
+        isRunning = false;
+        remaining = TOTAL;
+        renderTimer();
+      });
+
+      renderTimer();
+
+      /* ═══════════════════════════════════
+     TO-DO LIST
+  ═══════════════════════════════════ */
+      const STORAGE_KEY = "focus_dashboard_tasks";
+
+      function loadTasks() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveTasks(tasks) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      }
+
+      function renderTasks() {
+        const tasks = loadTasks();
+        const list = document.getElementById("task-list");
+        const empty = document.getElementById("todo-empty");
+        list.innerHTML = "";
+
+        if (tasks.length === 0) {
+          empty.style.display = "block";
+          return;
+        }
+        empty.style.display = "none";
+
+        tasks.forEach((task, index) => {
+          const li = document.createElement("li");
+          li.className = "task-item" + (task.done ? " done" : "");
+
+          // Checkbox circle
+          const check = document.createElement("div");
+          check.className = "task-check";
+          check.title = task.done ? "Mark as undone" : "Mark as done";
+          check.addEventListener("click", () => toggleTask(index));
+
+          // Editable text
+          const span = document.createElement("span");
+          span.className = "task-text";
+          span.textContent = task.text;
+          span.contentEditable = !task.done; // disable edit when done
+          span.spellcheck = false;
+          span.title = "Click to edit";
+
+          span.addEventListener("blur", () => {
+            const newText = span.textContent.trim();
+            if (newText === "") {
+              deleteTask(index);
+            } else {
+              updateTaskText(index, newText);
+            }
+          });
+
+          span.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              span.blur();
+            }
+            if (e.key === "Escape") {
+              span.textContent = task.text; // revert
+              span.blur();
+            }
+          });
+
+          // Delete button
+          const del = document.createElement("button");
+          del.className = "task-delete";
+          del.textContent = "✕";
+          del.title = "Delete task";
+          del.addEventListener("click", () => deleteTask(index));
+
+          li.append(check, span, del);
+          list.appendChild(li);
+        });
+      }
+
+      function addTask(text) {
+        const tasks = loadTasks();
+        tasks.push({ text, done: false });
+        saveTasks(tasks);
+        renderTasks();
+      }
+
+      function toggleTask(index) {
+        const tasks = loadTasks();
+        tasks[index].done = !tasks[index].done;
+        saveTasks(tasks);
+        renderTasks();
+      }
+
+      function deleteTask(index) {
+        const tasks = loadTasks();
+        tasks.splice(index, 1);
+        saveTasks(tasks);
+        renderTasks();
+      }
+
+      function updateTaskText(index, newText) {
+        const tasks = loadTasks();
+        if (tasks[index]) {
+          tasks[index].text = newText;
+          saveTasks(tasks);
+        }
+        // no full re-render needed; text already in DOM
+      }
+
+      // Add task on button click or Enter key
+      document.getElementById("btn-add-task").addEventListener("click", () => {
+        const input = document.getElementById("task-input");
+        const text = input.value.trim();
+        if (text) {
+          addTask(text);
+          input.value = "";
+          input.focus();
+        }
+      });
+
+      document.getElementById("task-input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("btn-add-task").click();
+      });
+
+      // Initial render
+      renderTasks();
+    </script>
+  </body>
+</html>
